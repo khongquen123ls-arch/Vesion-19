@@ -201,7 +201,7 @@ class MainActivity : android.app.Activity() {
             val padding = 18
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 typeface = Typeface.create("sans-serif", if (isBold) Typeface.BOLD else Typeface.NORMAL)
-                textSize = textSize.toFloat()
+                this.textSize = textSize.toFloat()
                 color = android.graphics.Color.BLACK
                 isSubpixelText = true
             }
