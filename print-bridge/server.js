@@ -1,0 +1,14 @@
+const http=require('http');
+const net=require('net');
+const PORT=3188;
+function json(res,status,obj){const body=JSON.stringify(obj);res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type'});res.end(body)}
+function validIp(ip){return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(ip)&&ip.split('.').every(n=>Number(n)>=0&&Number(n)<=255)}
+function tcpProbe(ip,port,timeout=5000){return new Promise(resolve=>{const s=new net.Socket();let done=false;const finish=x=>{if(done)return;done=true;try{s.destroy()}catch{}resolve(x)};s.setTimeout(timeout);s.once('connect',()=>finish({ok:true}));s.once('timeout',()=>finish({ok:false,error:'Hết thời gian chờ máy in.'}));s.once('error',e=>finish({ok:false,error:e.message}));s.connect(port,ip)})}
+function escposRaster(base64,widthBytes){const data=Buffer.from(base64,'base64');const height=Math.floor(data.length/widthBytes);const header=Buffer.from([0x1d,0x76,0x30,0x00,widthBytes&255,(widthBytes>>8)&255,height&255,(height>>8)&255]);const cut=Buffer.from([0x1d,0x56,0x00]);return Buffer.concat([Buffer.from([0x1b,0x40]),header,data,Buffer.from('\n\n'),cut])}
+const server=http.createServer(async(req,res)=>{
+ if(req.method==='OPTIONS')return json(res,204,{});
+ if(req.method==='GET'&&req.url==='/health')return json(res,200,{ok:true,service:'Ku Suu Print Bridge',port:PORT});
+ if(req.method!=='POST'||!['/probe','/print'].includes(req.url))return json(res,404,{ok:false,error:'Not found'});
+ let raw='';req.on('data',c=>raw+=c);req.on('end',async()=>{try{const p=JSON.parse(raw||'{}'),ip=String(p.printerIp||'').trim(),port=Number(p.port||9100);if(!validIp(ip))return json(res,400,{ok:false,error:'IP máy in không hợp lệ.'});if(!Number.isInteger(port)||port<1||port>65535)return json(res,400,{ok:false,error:'Port không hợp lệ.'});const probe=await tcpProbe(ip,port);if(!probe.ok)return json(res,502,probe);if(req.url==='/probe')return json(res,200,{ok:true,message:'Đã kết nối máy in.',printerIp:ip,port});const width=Number(p.widthBytes||72),b64=String(p.rasterBase64||'');if(!Number.isInteger(width)||width<1||width>200||!b64)return json(res,400,{ok:false,error:'Thiếu dữ liệu in.'});const payload=escposRaster(b64,width);const socket=new net.Socket();let settled=false;const finish=(status,obj)=>{if(settled)return;settled=true;try{socket.destroy()}catch{}json(res,status,obj)};socket.setTimeout(8000);socket.once('connect',()=>{socket.write(payload,()=>finish(200,{ok:true,message:'Đã gửi dữ liệu tới máy in.'}));});socket.once('timeout',()=>finish(504,{ok:false,error:'Hết thời gian gửi tới máy in.'}));socket.once('error',e=>finish(502,{ok:false,error:e.message}));socket.connect(port,ip);}catch(e){json(res,400,{ok:false,error:e.message})}});
+});
+server.listen(PORT,'0.0.0.0',()=>console.log(`Ku Suu Print Bridge listening on 0.0.0.0:${PORT}`));

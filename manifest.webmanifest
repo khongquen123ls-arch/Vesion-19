@@ -1,0 +1,15 @@
+{
+  "name": "Ku Sửu POS",
+  "short_name": "Ku Sửu POS",
+  "description": "Phần mềm quản lý bán hàng Ku Sửu POS",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7efe5",
+  "theme_color": "#2f7d32",
+  "icons": [
+    {"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
