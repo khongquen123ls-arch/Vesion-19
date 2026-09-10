@@ -7,6 +7,10 @@ import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.net.InetSocketAddress
@@ -20,7 +24,11 @@ class MainActivity : android.app.Activity() {
         private const val CONNECT_TIMEOUT_MS = 3500
         private const val SOCKET_TIMEOUT_MS = 10000
         private const val LINE_WIDTH = 48
-        private val PRINTER_CHARSET: Charset = Charset.forName("windows-1258")
+        // Chỉ dùng ASCII cho text ESC/POS. Các dòng có tiếng Việt được render
+        // bằng font Android thành raster để không phụ thuộc code-page của máy in.
+        private val PRINTER_CHARSET: Charset = Charsets.US_ASCII
+        private const val RASTER_WIDTH = 576
+        private const val RASTER_TEXT_SIZE = 28f
     }
 
     private lateinit var webView: WebView
@@ -124,18 +132,64 @@ class MainActivity : android.app.Activity() {
         private fun buildReceipt(r: JSONObject): ByteArray {
             val out = ByteArrayOutputStream()
             fun cmd(vararg b: Int) = out.write(b.map { (it and 0xFF).toByte() }.toByteArray())
-            fun text(s: String) = out.write(s.toByteArray(PRINTER_CHARSET))
-            fun line(s: String = "") { text(s); cmd(0x0A) }
-            fun bold(on: Boolean) = cmd(0x1B, 0x45, if (on) 1 else 0)
-            fun align(n: Int) = cmd(0x1B, 0x61, n)
+            fun hasUnicode(s: String): Boolean = s.any { it.code > 127 }
+            fun textAscii(s: String) = out.write(s.toByteArray(PRINTER_CHARSET))
+            fun rasterLine(s: String, bold: Boolean, alignment: Int) {
+                val width = RASTER_WIDTH
+                val height = 38
+                val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bmp)
+                canvas.drawColor(android.graphics.Color.WHITE)
+                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    color = android.graphics.Color.BLACK
+                    typeface = Typeface.create("sans-serif", if (bold) Typeface.BOLD else Typeface.NORMAL)
+                    this.textSize = RASTER_TEXT_SIZE
+                    isSubpixelText = true
+                }
+                val value = s.trimEnd()
+                val measured = paint.measureText(value)
+                val x = when (alignment) {
+                    1 -> (width - measured) / 2f
+                    2 -> width - measured - 8f
+                    else -> 8f
+                }.coerceAtLeast(0f)
+                val baseline = 29f
+                canvas.drawText(value, x, baseline, paint)
+                val pixels = IntArray(width * height)
+                bmp.getPixels(pixels, 0, width, 0, 0, width, height)
+                val wb = width / 8
+                val data = ByteArray(wb * height)
+                for (y in 0 until height) {
+                    for (x0 in 0 until width) {
+                        val px = pixels[y * width + x0]
+                        val rr = (px shr 16) and 0xFF
+                        val gg = (px shr 8) and 0xFF
+                        val bb = px and 0xFF
+                        val gray = (rr * 299 + gg * 587 + bb * 114) / 1000
+                        if (gray < 180) data[y * wb + (x0 shr 3)] =
+                            (data[y * wb + (x0 shr 3)].toInt() or (0x80 shr (x0 and 7))).toByte()
+                    }
+                }
+                cmd(0x1D, 0x76, 0x30, 0x00, wb and 0xFF, (wb shr 8) and 0xFF,
+                    height and 0xFF, (height shr 8) and 0xFF)
+                out.write(data)
+                cmd(0x0A)
+                bmp.recycle()
+            }
+            var currentAlignment = 0
+            var currentBold = false
+            fun line(s: String = "") {
+                if (hasUnicode(s)) rasterLine(s, currentBold, currentAlignment)
+                else { textAscii(s); cmd(0x0A) }
+            }
+            fun bold(on: Boolean) { currentBold = on; cmd(0x1B, 0x45, if (on) 1 else 0) }
+            fun align(n: Int) { currentAlignment = n; cmd(0x1B, 0x61, n) }
 
             cmd(0x1B, 0x40) // initialize
-            // ESC/POS code page 19 is commonly mapped to Windows-1258 on 80mm printers.
-            cmd(0x1B, 0x74, 19)
             align(1)
             bold(true); line(r.optString("shopName", "KU SỬU POS")); bold(false)
             line("Địa chỉ: " + r.optString("address", ""))
-            line("ĐIỆN THOẠI: " + r.optString("phone", ""))
+            line("Điện thoại: " + r.optString("phone", ""))
             bold(true); line("HÓA ĐƠN BÁN HÀNG"); bold(false)
             line("Số HĐ: " + r.optString("invoiceNo", ""))
             line("Ngày: " + r.optString("date", ""))
@@ -151,15 +205,13 @@ class MainActivity : android.app.Activity() {
                     val name = item.optString("name", "Món")
                     val qty = item.optDouble("qty", 0.0)
                     val total = item.optLong("total", 0L)
-                    wrapText(name, 32).forEachIndexed { idx, part ->
-                        if (idx == 0) {
-                            val qtyText = formatQty(qty)
-                            val money = formatMoney(total)
-                            val left = part.take(32).padEnd(32, ' ')
-                            val right = "x$qtyText".padStart(6) + money.padStart(10)
-                            line((left + right).take(LINE_WIDTH))
-                        } else line("  " + part)
-                    }
+                    val nameParts = wrapText(name, 30)
+                    nameParts.forEach { part -> line(part) }
+                    val qtyText = formatQty(qty)
+                    val unitPrice = formatMoney(item.optLong("price", 0L))
+                    val money = formatMoney(total)
+                    // Dòng số liệu thuần ASCII để giữ tốc độ in cao nhất có thể.
+                    line("  x$qtyText  $unitPrice  $money")
                 }
             }
             line("-----------------------------------------------")
