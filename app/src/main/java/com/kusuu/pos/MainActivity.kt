@@ -1,10 +1,6 @@
 package com.kusuu.pos
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Typeface
 import android.os.Bundle
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
@@ -24,7 +20,7 @@ class MainActivity : android.app.Activity() {
         private const val CONNECT_TIMEOUT_MS = 3500
         private const val SOCKET_TIMEOUT_MS = 10000
         private const val LINE_WIDTH = 48
-        private val PRINTER_CHARSET: Charset = Charset.forName("US-ASCII")
+        private val PRINTER_CHARSET: Charset = Charset.forName("windows-1258")
     }
 
     private lateinit var webView: WebView
@@ -129,20 +125,14 @@ class MainActivity : android.app.Activity() {
             val out = ByteArrayOutputStream()
             fun cmd(vararg b: Int) = out.write(b.map { (it and 0xFF).toByte() }.toByteArray())
             fun text(s: String) = out.write(s.toByteArray(PRINTER_CHARSET))
-            fun line(s: String = "") {
-                if (s.all { it.code < 128 }) {
-                    text(s); cmd(0x0A)
-                } else {
-                    writeUnicodeLine(out, s)
-                    cmd(0x0A)
-                }
-            }
+            fun line(s: String = "") { text(s); cmd(0x0A) }
             fun bold(on: Boolean) = cmd(0x1B, 0x45, if (on) 1 else 0)
             fun align(n: Int) = cmd(0x1B, 0x61, n)
 
             cmd(0x1B, 0x40) // initialize
-            // Keep V19's direct ESC/POS text path. Unsupported Vietnamese glyphs
-            // are rasterized only on the affected line; the rest stays byte-fast.
+            // Select Windows-1258 Vietnamese code page where supported.
+            // V19 fast ESC/POS path is otherwise unchanged.
+            cmd(0x1B, 0x74, 52)
             align(1)
             bold(true); line(r.optString("shopName", "KU SỬU POS")); bold(false)
             line("Địa chỉ: " + r.optString("address", ""))
@@ -189,73 +179,6 @@ class MainActivity : android.app.Activity() {
             cmd(0x1B, 0x64, 3) // feed 3
             cmd(0x1D, 0x56, 0) // cut
             return out.toByteArray()
-        }
-
-        private fun writeUnicodeLine(out: ByteArrayOutputStream, value: String) {
-            // Render only the current Vietnamese/unicode line, not the whole receipt.
-            // This keeps the V19 fast path for ASCII while Android's font engine
-            // supplies proper Vietnamese glyphs. The bitmap is tightly cropped.
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-                textSize = 25f
-                color = android.graphics.Color.BLACK
-                isDither = false
-            }
-            val fm = paint.fontMetrics
-            val pad = 2
-            val width = kotlin.math.ceil(paint.measureText(value)).toInt().coerceIn(1, 576 - pad * 2) + pad * 2
-            val height = kotlin.math.ceil(fm.bottom - fm.top).toInt().coerceAtLeast(24) + pad * 2
-            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            try {
-                val canvas = Canvas(bmp)
-                canvas.drawColor(android.graphics.Color.WHITE)
-                canvas.drawText(value, pad.toFloat(), pad - fm.top, paint)
-
-                var left = width
-                var right = -1
-                var top = height
-                var bottom = -1
-                val pixels = IntArray(width)
-                for (y in 0 until height) {
-                    bmp.getPixels(pixels, 0, width, 0, y, width, 1)
-                    for (x in 0 until width) {
-                        if (android.graphics.Color.red(pixels[x]) < 200) {
-                            if (x < left) left = x
-                            if (x > right) right = x
-                            if (y < top) top = y
-                            if (y > bottom) bottom = y
-                        }
-                    }
-                }
-                if (right < left || bottom < top) return
-                left = (left - 1).coerceAtLeast(0)
-                right = (right + 1).coerceAtMost(width - 1)
-                top = (top - 1).coerceAtLeast(0)
-                bottom = (bottom + 1).coerceAtMost(height - 1)
-                val cropW = right - left + 1
-                val cropH = bottom - top + 1
-                val wb = (cropW + 7) / 8
-                val raster = ByteArray(wb * cropH)
-                val row = IntArray(cropW)
-                for (yy in 0 until cropH) {
-                    bmp.getPixels(row, 0, cropW, left, top + yy, cropW, 1)
-                    for (xx in 0 until cropW) {
-                        if (android.graphics.Color.red(row[xx]) < 180) {
-                            raster[yy * wb + (xx ushr 3)] =
-                                (raster[yy * wb + (xx ushr 3)].toInt() or (0x80 ushr (xx and 7))).toByte()
-                        }
-                    }
-                }
-                // GS v 0 — printer receives one compact bitmap for this line.
-                out.write(byteArrayOf(0x1D, 0x76, 0x30, 0x00))
-                out.write(wb and 0xFF)
-                out.write((wb ushr 8) and 0xFF)
-                out.write(cropH and 0xFF)
-                out.write((cropH ushr 8) and 0xFF)
-                out.write(raster)
-            } finally {
-                bmp.recycle()
-            }
         }
 
         private fun wrapText(value: String, max: Int): List<String> {
