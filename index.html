@@ -478,6 +478,11 @@ body.mobile-preview-child #mobilePreviewOverlay,body.mobile-preview-child .mobil
 
 
 .print-settings{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fffaf3}.print-status{margin-top:8px;font-size:13px}.print-ok{color:#39752f}.print-bad{color:#b42318}
+
+/* ===== PROFESSIONAL RECEIPT / INVOICE ===== */
+.invoice-paper{background:#fff;border:1px solid #ded4c8;border-radius:14px;padding:22px 18px;color:#231b15;box-shadow:0 8px 24px rgba(50,30,15,.08);max-width:760px;margin:0 auto;font-family:Arial,"Segoe UI",sans-serif}
+.invoice-head{text-align:center}.invoice-shop{font-size:27px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.invoice-contact{font-size:14px;margin-top:5px;color:#4d433c}.invoice-title-row{display:flex;align-items:center;gap:12px;margin:16px 0 12px}.invoice-rule{height:2px;background:#231b15;flex:1}.invoice-title{font-size:20px;font-weight:900;white-space:nowrap}.invoice-meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 24px;font-size:14px;margin:4px 0 15px}.invoice-meta div:nth-child(even){text-align:right}.invoice-divider{border-top:1px dashed #8d8278;margin:11px 0}.invoice-items-head,.invoice-item{display:grid;grid-template-columns:minmax(0,1fr) 70px 145px;gap:8px;align-items:start}.invoice-items-head{font-weight:900;font-size:13px;border-bottom:1px solid #2b241f;padding:0 0 8px}.invoice-items-head div:nth-child(2),.invoice-item .qty{text-align:center}.invoice-items-head div:nth-child(3),.invoice-item .money{text-align:right}.invoice-item{font-size:14px;padding:7px 0}.invoice-item .name{line-height:1.3;text-align:left}.invoice-total{border-top:2px solid #2b241f;border-bottom:2px solid #2b241f;margin-top:9px;padding:12px 0;display:flex;justify-content:space-between;gap:15px;font-size:20px;font-weight:900}.invoice-total span:last-child{text-align:right}.invoice-qr{text-align:center;padding-top:14px}.invoice-qr img{width:150px;height:150px;object-fit:contain;display:block;margin:7px auto}.invoice-qr .qr-note{font-size:12px;font-weight:800}.invoice-footer{text-align:center;margin-top:17px}.invoice-thanks{font-size:17px;font-weight:900}.invoice-meet{font-size:13px;margin-top:4px}.invoice-empty-qr{font-size:12px;color:#8a7d72;padding-top:10px}.invoice-print-note{font-size:11px;color:#8a7d72;margin-top:10px}
+@media(max-width:700px){.invoice-paper{padding:17px 12px;border-radius:12px}.invoice-shop{font-size:23px}.invoice-title{font-size:17px}.invoice-contact{font-size:13px}.invoice-meta{font-size:12px;gap:4px 12px}.invoice-items-head,.invoice-item{grid-template-columns:minmax(0,1fr) 50px 104px;gap:6px}.invoice-item{font-size:13px}.invoice-total{font-size:17px}.invoice-qr img{width:132px;height:132px}}
 </style>
 
 <style id="mobile-menu-left-align-v7">
@@ -810,7 +815,7 @@ body.mobile-preview-child #mobilePreviewOverlay,body.mobile-preview-child .mobil
 <div class="card"><h3>📤 Xuất bản sao lưu</h3><p>Tạo một file JSON chứa toàn bộ dữ liệu: đơn hàng, bàn, thực đơn, nguyên liệu, công thức và cấu hình.</p><button class="btn green" id="exportData">XUẤT DỮ LIỆU</button><p class="mini">Lưu file vào thư mục anh chọn. Nên sao lưu sau mỗi ca làm việc.</p></div>
 <div class="card"><h3>📥 Nhập / khôi phục dữ liệu</h3><p>Chọn file sao lưu JSON gần nhất để cập nhật dữ liệu vào app hiện tại.</p><input id="importFile" type="file" accept=".json"><br><br><button class="btn blue" id="importData">NHẬP & KHÔI PHỤC</button><div class="notice">Dữ liệu được lưu cục bộ trên trình duyệt bằng LocalStorage. Bản tiếp theo có thể đóng gói thành ứng dụng desktop để chọn thư mục sao lưu tự động và in hóa đơn trực tiếp.</div></div>
 </div>
-<div style="height:18px"></div><div class="card"><h3>THIẾT LẬP SAO LƯU</h3><div class="split"><div class="field"><label>Nhắc sao lưu sau mỗi</label><select id="backupReminder"><option value="session">Ca làm việc</option><option value="day">Ngày</option></select></div><div class="field"><label>Tên cơ sở</label><input id="shopName" value="Quán Ku Sửu (190 Bà Triệu)"></div></div><button class="btn" id="saveSettings">LƯU THIẾT LẬP</button></div>
+<div style="height:18px"></div><div class="card"><h3>THIẾT LẬP CỬA HÀNG & QR CHUYỂN KHOẢN</h3><div class="grid2"><div class="field"><label>Nhắc sao lưu sau mỗi</label><select id="backupReminder"><option value="session">Ca làm việc</option><option value="day">Ngày</option></select></div><div class="field"><label>Tên cơ sở</label><input id="shopName" value="Quán Ku Sửu"></div><div class="field"><label>Địa chỉ</label><input id="shopAddress" value="190 Bà Triệu"></div><div class="field"><label>Điện thoại</label><input id="shopPhone" value="0825626399"></div><div class="field"><label>Ngân hàng / BIN (để tạo VietQR)</label><input id="qrBankId" placeholder="Ví dụ: MB, VCB hoặc mã BIN 970422"></div><div class="field"><label>Số tài khoản</label><input id="qrAccountNo" inputmode="numeric" placeholder="Nhập số tài khoản nhận tiền"></div><div class="field"><label>Tên tài khoản</label><input id="qrAccountName" placeholder="Ví dụ: QUAN KU SUU"></div></div><div class="notice mini">Nếu nhập đủ 3 thông tin VietQR, hóa đơn trong app sẽ tự tạo QR theo đúng số tiền và số hóa đơn. Nếu chưa nhập thì QR sẽ tự ẩn.</div><button class="btn" id="saveSettings">LƯU THIẾT LẬP</button></div>
 <div style="height:18px"></div><div class="card print-settings"><h3>🖨️ THIẾT LẬP MÁY IN LAN · 80mm</h3><p class="mini">Giống cách dùng CUKCUK: máy in kết nối vào cục phát Wi‑Fi, anh chỉ cần nhập <b>IP của máy in</b>. APK Android V19 gửi lệnh ESC/POS trực tiếp qua mạng nội bộ, nên nhanh hơn nhiều so với việc chuyển cả hóa đơn thành ảnh.</p><div class="grid2"><div class="field"><label>Địa chỉ IP máy in</label><input id="printerIp" placeholder="Ví dụ: 192.168.1.120" inputmode="decimal"></div><div class="field"><label>Cổng máy in</label><input id="printerPort" type="number" value="9100" min="1" max="65535"></div><div class="field"><label>Khổ giấy</label><input value="80mm · 576 dots" disabled></div><div class="field"><label>Trạng thái</label><input value="Máy in LAN / Wi‑Fi" disabled></div></div><div class="toolbar"><button class="btn" id="savePrinterSettings">💾 LƯU MÁY IN</button><button class="btn blue" id="testPrintBridge">🔍 KIỂM TRA KẾT NỐI</button><button class="btn green" id="testThermalPrint">🧾 IN HÓA ĐƠN TEST</button></div><div id="printStatus" class="print-status mini">Chưa kết nối máy in.</div><div class="notice">💡 Máy tính/thiết bị chạy Ku Sửu và máy in phải cùng mạng Wi‑Fi/LAN. Cổng mặc định là <b>9100</b>. Trên APK Android V19, Ku Sửu in trực tiếp tới IP máy in qua Wi‑Fi, không cần máy tính/Print Bridge. Print Bridge chỉ còn là đường dự phòng khi mở WebApp bằng trình duyệt.</div></div>
 <div style="height:18px"></div><div class="card danger-card"><h3>⚠️ XÓA TOÀN BỘ DỮ LIỆU</h3><p class="mini">Chỉ tài khoản <b>Quản trị viên</b> mới thấy chức năng này. Xóa sẽ làm sạch toàn bộ đơn hàng, bàn, thực đơn, nguyên liệu và công thức trên máy này và trên Supabase.</p><button class="btn danger" id="wipeAllData">🗑️ XÓA TOÀN BỘ DỮ LIỆU</button><div class="notice">Thao tác này không thể hoàn tác. Hệ thống sẽ yêu cầu mật khẩu quản trị viên trước khi thực hiện.</div></div><div style="height:18px"></div><div class="card cloud-card"><h3>☁️ KẾT NỐI CLOUD</h3><p class="mini">Ku Sửu POS đã được cấu hình sẵn Supabase. Chỉ cần mở app trên máy mới là hệ thống tự kết nối và đồng bộ dữ liệu.</p><div class="cloud-auto"><span class="cloud-dot">●</span><div><b id="cloudConnectionLabel">ĐANG TỰ ĐỘNG KẾT NỐI...</b><small>Không cần nhập Project URL hoặc Publishable key trên từng thiết bị.</small></div></div><div id="supabaseStatus" class="notice">☁️ Đang kết nối Supabase...</div></div>
 </section>
@@ -829,7 +834,7 @@ const VND=n=>new Intl.NumberFormat('vi-VN').format(Math.round(n||0))+' đ';
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const day=d=>new Date(d).toISOString().slice(0,10);
 let db={
- settings:{shopName:'Quán Ku Sửu (190 Bà Triệu)',backupReminder:'session',printBridgeUrl:'http://127.0.0.1:3188',printerIp:'',printerPort:9100},
+ settings:{shopName:'Quán Ku Sửu',address:'190 Bà Triệu',phone:'0825626399',backupReminder:'session',printBridgeUrl:'http://127.0.0.1:3188',printerIp:'',printerPort:9100,invoiceCounter:0,qrBankId:'',qrAccountNo:'',qrAccountName:''},
  tables:Array.from({length:20},(_,i)=>({id:String(i+1),name:'Bàn '+(i+1)})),
  dishes:[
   {id:'d1',name:'Bún riêu cua',price:45000,station:'kitchen'},{id:'d2',name:'Phở bò',price:55000,station:'kitchen'},
@@ -877,7 +882,7 @@ async function loadCloud(){
     db.ingredients=(i.data||[]).map(x=>({id:x.id,name:x.name,unit:x.unit,qty:Number(x.qty||0),avgCost:Number(x.avg_cost||0)}));
     db.recipes={};
     (r.data||[]).forEach(x=>{(db.recipes[x.dish_id]??=[]).push({ingredientId:x.ingredient_id,qty:Number(x.qty||0)})});
-    db.orders=(o.data||[]).map(x=>({id:x.id,tableId:x.table_id,tableName:x.table_name,items:Array.isArray(x.items)?x.items:[],total:Number(x.total||0),cost:Number(x.cost||0),createdAt:x.created_at,paid:!!x.paid,kitchenDone:!!x.kitchen_done,kitchenCompleted:Array.isArray(x.kitchen_completed)?x.kitchen_completed:[],barCompleted:Array.isArray(x.bar_completed)?x.bar_completed:[]}));
+    db.orders=(o.data||[]).map(x=>({id:x.id,tableId:x.table_id,tableName:x.table_name,items:Array.isArray(x.items)?x.items:[],total:Number(x.total||0),cost:Number(x.cost||0),createdAt:x.created_at,paid:!!x.paid,paymentGroupId:x.payment_group_id||'',paidAt:x.paid_at||'',invoiceNo:x.invoice_no||'',cashier:x.cashier||'',paymentMethod:x.payment_method||'',kitchenDone:!!x.kitchen_done,kitchenCompleted:Array.isArray(x.kitchen_completed)?x.kitchen_completed:[],barCompleted:Array.isArray(x.bar_completed)?x.bar_completed:[]}));
     if(st.data?.data)db.settings={...db.settings,...st.data.data};
     saveLocal();render();
   }catch(e){console.error(e);setCloudStatus('❌ Lỗi tải Supabase: '+(e?.message||e))}
@@ -910,7 +915,7 @@ async function syncCloud(){
     const ingredients=(db.ingredients||[]).map(x=>({id:String(x.id),name:x.name,unit:x.unit||'',qty:Number(x.qty||0),avg_cost:Number(x.avgCost||0)}));
     const recipes=[];
     Object.entries(db.recipes||{}).forEach(([dishId,rows])=>(rows||[]).forEach(r=>recipes.push({id:String(dishId)+'::'+String(r.ingredientId),dish_id:String(dishId),ingredient_id:String(r.ingredientId),qty:Number(r.qty||0)})));
-    const orders=(db.orders||[]).map(o=>({id:String(o.id),table_id:String(o.tableId||''),table_name:o.tableName||'',items:o.items||[],total:Number(o.total||0),cost:Number(o.cost||0),created_at:o.createdAt||new Date().toISOString(),paid:!!o.paid,kitchen_done:!!o.kitchenDone,kitchen_completed:o.kitchenCompleted||[],bar_completed:o.barCompleted||[]}));
+    const orders=(db.orders||[]).map(o=>({id:String(o.id),table_id:String(o.tableId||''),table_name:o.tableName||'',items:o.items||[],total:Number(o.total||0),cost:Number(o.cost||0),created_at:o.createdAt||new Date().toISOString(),paid:!!o.paid,payment_group_id:o.paymentGroupId||null,paid_at:o.paidAt||null,invoice_no:o.invoiceNo||null,cashier:o.cashier||null,payment_method:o.paymentMethod||null,kitchen_done:!!o.kitchenDone,kitchen_completed:o.kitchenCompleted||[],bar_completed:o.barCompleted||[]}));
     // Delete stale recipe rows before deleting dishes/ingredients, then sync all collections.
     await syncCollection('pos_recipes',recipes);
     await syncCollection('pos_tables',tables);
@@ -1071,26 +1076,45 @@ document.getElementById('orderMenuSearch').oninput=renderPOSMenu;
 function itemCost(it){let r=db.recipes[it.dishId]||[];return r.reduce((s,x)=>{let ing=db.ingredients.find(i=>i.id===x.ingredientId);return s+(ing?(ing.avgCost||0)*x.qty:0)},0)*it.qty}
 function getPrinterSettings(){return {bridge:String(db.settings?.printBridgeUrl||'http://127.0.0.1:3188').replace(/\/$/,''),ip:String(db.settings?.printerIp||'').trim(),port:Number(db.settings?.printerPort||9100)}}
 function mergedBillItems(orders){const m=new Map();orders.forEach(o=>(o.items||[]).forEach(i=>{const k=String(i.dishId||i.name);const x=m.get(k);if(x){x.qty+=Number(i.qty||0);x.total+=Number(i.price||0)*Number(i.qty||0)}else m.set(k,{name:i.name,qty:Number(i.qty||0),price:Number(i.price||0),total:Number(i.price||0)*Number(i.qty||0)})}));return [...m.values()]}
+function getInvoiceNumber(orders){
+ const first=orders[0]||{};
+ if(first.invoiceNo)return first.invoiceNo;
+ const n=Number(first.id?.replace(/\D/g,'')||0)%1000000;
+ return 'KS-'+String(n||1).padStart(3,'0');
+}
+function qrUrlForReceipt(receipt){
+ const s=db.settings||{};
+ if(!s.qrBankId||!s.qrAccountNo||!s.qrAccountName)return '';
+ const bank=encodeURIComponent(String(s.qrBankId).trim()),acct=encodeURIComponent(String(s.qrAccountNo).trim());
+ const info=encodeURIComponent(('HD '+receipt.invoiceNo).slice(0,50));
+ const name=encodeURIComponent(String(s.qrAccountName).trim());
+ return `https://img.vietqr.io/image/${bank}-${acct}-compact2.png?amount=${Math.round(receipt.total||0)}&addInfo=${info}&accountName=${name}`;
+}
 function makeReceiptData(orders){
  const items=mergedBillItems(orders), total=orders.reduce((s,o)=>s+Number(o.total||0),0);
  const first=orders[0]||{};
- const rawId=String(first.paymentGroupId||first.id||Date.now()).replace(/[^a-zA-Z0-9]/g,'').slice(-8).toUpperCase();
  const dt=first.paidAt||first.createdAt||new Date().toISOString();
  const d=new Date(dt);
  const date=new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short'}).format(d);
- return {shopName:db.settings?.shopName||'KU SỬU POS',address:db.settings?.address||'',phone:db.settings?.phone||'',invoiceNo:'KS-'+rawId,date,table:first.tableName||'Bàn',cashier:db.settings?.cashier||'Ku Sửu',items:items.map(i=>({name:i.name,qty:Number(i.qty||0),total:Math.round(i.total||0)})),subtotal:Math.round(total),discount:0,total:Math.round(total),payment:first.paymentMethod||'Tiền mặt'};
+ const receipt={shopName:db.settings?.shopName||'Quán Ku Sửu',address:db.settings?.address||'190 Bà Triệu',phone:db.settings?.phone||'0825626399',invoiceNo:first.invoiceNo||getInvoiceNumber(orders),date,table:first.tableName||'Bàn',cashier:first.cashier||'Chưa xác định',items:items.map(i=>({name:i.name,qty:Number(i.qty||0),total:Math.round(i.total||0)})),total:Math.round(total),qrBankId:db.settings?.qrBankId||'',qrAccountNo:db.settings?.qrAccountNo||'',qrAccountName:db.settings?.qrAccountName||''};
+ receipt.qrUrl=qrUrlForReceipt(receipt); return receipt;
 }
 function receiptRaster(orders){
- // V18 fallback: giữ lại raster để chạy với trình duyệt/Print Bridge cũ.
- const W=576,pad=28,fs=25,small=20,lh=34; const items=mergedBillItems(orders); const total=orders.reduce((s,o)=>s+Number(o.total||0),0); const table=orders[0]?.tableName||'Bàn';
- const lines=[]; const wrap=(text,max=36)=>{text=String(text);while(text.length>max){let k=text.lastIndexOf(' ',max);if(k<8)k=max;lines.push(text.slice(0,k));text=text.slice(k).trim()}if(text)lines.push(text)};
- lines.push({t:(db.settings?.shopName||'KU SỬU POS'),b:1,c:fs});lines.push({t:'HÓA ĐƠN BÁN HÀNG',b:1,c:fs});lines.push({t:table,b:1,c:fs});lines.push({t:'--------------------------------',c:small});
- items.forEach(i=>{const before=lines.length;wrap(i.name,29);const nameLines=lines.splice(before);nameLines.forEach((n,idx)=>lines.push({t:idx===nameLines.length-1?`${n}  x${i.qty}  ${new Intl.NumberFormat('vi-VN').format(i.total)} đ`:n,c:small}));});
- lines.push({t:'--------------------------------',c:small});lines.push({t:`TỔNG THANH TOÁN: ${new Intl.NumberFormat('vi-VN').format(total)} đ`,b:1,c:fs});lines.push({t:'',c:small});lines.push({t:'CẢM ƠN QUÝ KHÁCH!',b:1,c:small});
+ const W=576,pad=24,fs=25,small=20,lh=31; const receipt=makeReceiptData(orders); const items=receipt.items; const lines=[];
+ const wrap=(text,max=38)=>{const out=[];let rest=String(text||'').trim();while(rest.length>max){let k=rest.lastIndexOf(' ',max);if(k<10)k=max;out.push(rest.slice(0,k).trim());rest=rest.slice(k).trim()}if(rest)out.push(rest);return out};
+ lines.push({t:receipt.shopName,b:1,c:fs,a:'center'});lines.push({t:`${receipt.address}  |  ĐT: ${receipt.phone}`,c:small,a:'center'});lines.push({t:'HÓA ĐƠN BÁN HÀNG',b:1,c:fs,a:'center'});lines.push({t:`Số HĐ: ${receipt.invoiceNo}    Bàn: ${receipt.table}`,c:small,a:'left'});lines.push({t:`Ngày: ${receipt.date}    Thu ngân: ${receipt.cashier}`,c:small,a:'left'});lines.push({t:'-----------------------------------------------',c:small,a:'center'});lines.push({t:'MÓN                         SL       THÀNH TIỀN',b:1,c:small,a:'left'});
+ items.forEach(i=>{const wrapped=wrap(i.name,28);wrapped.forEach((n,idx)=>lines.push({t:idx===0?`${n.padEnd(29,' ')}${String(i.qty).padStart(4,' ')}   ${new Intl.NumberFormat('vi-VN').format(i.total).padStart(11,' ')} đ`:n,c:small,a:'left'}));});
+ lines.push({t:'-----------------------------------------------',c:small,a:'center'});lines.push({t:`TỔNG THANH TOÁN: ${new Intl.NumberFormat('vi-VN').format(receipt.total)} đ`,b:1,c:fs,a:'left'});lines.push({t:'',c:small});lines.push({t:'CẢM ƠN QUÝ KHÁCH!',b:1,c:small,a:'center'});lines.push({t:'HẸN GẶP LẠI',c:small,a:'center'});
  const H=pad*2+lines.length*lh+20,canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#000';ctx.textBaseline='top';let y=pad;
- lines.forEach(l=>{ctx.font=`${l.b?'700 ':''}${l.c}px Arial, sans-serif`;const w=ctx.measureText(l.t).width;ctx.fillText(l.t,(W-w)/2,y);y+=lh});
+ lines.forEach(l=>{ctx.font=`${l.b?'700 ':''}${l.c}px Arial, sans-serif`;const w=ctx.measureText(l.t).width;let x=l.a==='center'?(W-w)/2:l.a==='right'?W-pad-w:pad;ctx.fillText(l.t,x,y);y+=lh});
  const d=ctx.getImageData(0,0,W,H).data,bytes=new Uint8Array(Math.ceil(W/8)*H),wb=W/8;for(let yy=0;yy<H;yy++)for(let xx=0;xx<W;xx++){const id=(yy*W+xx)*4;if(d[id]<180)bytes[yy*wb+(xx>>3)]|=(0x80>>(xx&7));}return {base64:btoa(String.fromCharCode(...bytes)),widthBytes:wb};
 }
+function renderProfessionalInvoice(orders){
+ const receipt=makeReceiptData(orders); const esc=escHTML; const rows=receipt.items.map(i=>`<div class="invoice-item"><div class="name">${esc(i.name)}</div><div class="qty">${esc(formatQtyDisplay(i.qty))}</div><div class="money">${esc(VND(i.total))}</div></div>`).join('');
+ const qr=receipt.qrUrl?`<div class="invoice-qr"><div class="qr-note">QUÉT QR ĐỂ CHUYỂN KHOẢN</div><img src="${receipt.qrUrl}" alt="VietQR thanh toán"><div class="mini">Nội dung: ${esc(receipt.invoiceNo)}</div></div>`:'';
+ return `<div class="invoice-paper"><div class="invoice-head"><div class="invoice-shop">${esc(receipt.shopName)}</div><div class="invoice-contact">${esc(receipt.address)} &nbsp; | &nbsp; ĐT: ${esc(receipt.phone)}</div></div><div class="invoice-title-row"><span class="invoice-rule"></span><div class="invoice-title">HÓA ĐƠN BÁN HÀNG</div><span class="invoice-rule"></span></div><div class="invoice-meta"><div><b>Số HĐ:</b> ${esc(receipt.invoiceNo)}</div><div><b>Bàn:</b> ${esc(receipt.table)}</div><div><b>Ngày:</b> ${esc(receipt.date)}</div><div><b>Thu ngân:</b> ${esc(receipt.cashier)}</div></div><div class="invoice-divider"></div><div class="invoice-items-head"><div>MÓN</div><div>SL</div><div>THÀNH TIỀN</div></div>${rows||'<div class="invoice-item"><div class="name">Không có món</div><div></div><div></div></div>'}<div class="invoice-divider"></div><div class="invoice-total"><span>TỔNG THANH TOÁN</span><span>${esc(VND(receipt.total))}</span></div>${qr}<div class="invoice-footer"><div class="invoice-thanks">CẢM ƠN QUÝ KHÁCH!</div><div class="invoice-meet">HẸN GẶP LẠI</div></div></div>`;
+}
+function formatQtyDisplay(v){return Number(v)%1===0?String(Number(v)):String(Number(v).toFixed(2)).replace(/0+$/,'').replace(/\.$/,'')}
 async function sendThermalPrint(orders,silent=false){
  const st=getPrinterSettings();if(!st.ip)return {ok:false,error:'Chưa nhập IP máy in.'};
  try{
@@ -1233,15 +1257,7 @@ window.openTable=id=>{
    const grandQty=allItems.reduce((s,i)=>s+Number(i.qty||0),0);
    const firstTime=new Date(os[0].createdAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
    const lastTime=new Date(os[os.length-1].createdAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
-   body.innerHTML=`<div class="card table-order-card" style="margin:8px 0">
-     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-       <b>HÓA ĐƠN TỔNG HỢP · ${firstTime}${os.length>1?' → '+lastTime:''}</b>
-       <span class="status-pill">${grandQty} món</span>
-     </div>
-     <div class="mini" style="margin:7px 0 4px">${os.length} lượt gọi · đã gộp toàn bộ món của ${t.name}</div>
-     <ul>${allItems.map(i=>`<li>${escHTML(i.name)} × ${i.qty} = ${VND(i.total)}</li>`).join('')}</ul>
-     <div class="table-order-total"><b>Tổng thanh toán: ${VND(grandTotal)}</b></div>
-   </div>`;
+   body.innerHTML=renderProfessionalInvoice(os);
  }
  document.getElementById('tableModal').classList.add('show');
 };
@@ -1262,11 +1278,19 @@ document.getElementById('payTable').onclick=()=>{
  if(!os.length)return alert('Bàn này chưa có đơn.');
  const total=os.reduce((s,o)=>s+Number(o.total||0),0);
  const qty=os.reduce((s,o)=>s+(o.items||[]).reduce((q,i)=>q+Number(i.qty||0),0),0);
- if(!confirm('Xác nhận thanh toán HÓA ĐƠN TỔNG HỢP của '+(os[0].tableName||'bàn này')+'?\n\n'+qty+' món · '+VND(total)+'\n\nCác lượt gọi trong cùng một bàn sẽ được thanh toán chung thành một hóa đơn.'))return;
- const paymentGroupId=uid();
- os.forEach(o=>{o.paid=true;o.paymentGroupId=paymentGroupId;o.paidAt=new Date().toISOString()});
- save();closeModal('tableModal');render();
+ const cashier=prompt('Nhập tên nhân viên thu ngân:',String(db.settings?.cashier||'').trim());
+ if(cashier===null)return;
+ const cashierName=cashier.trim(); if(!cashierName)return alert('Vui lòng nhập tên nhân viên thu ngân.');
+ const maxNo=(db.orders||[]).reduce((m,o)=>{const n=Number(String(o.invoiceNo||'').replace(/\D/g,''));return Number.isFinite(n)?Math.max(m,n):m},0);
+ const next=Math.max(Number(db.settings?.invoiceCounter||0),maxNo)+1;
+ const invoiceNo='KS-'+String(next).padStart(3,'0');
+ if(!confirm('Xác nhận thanh toán HÓA ĐƠN '+invoiceNo+' của '+(os[0].tableName||'bàn này')+'?\n\n'+qty+' món · '+VND(total)+'\n\nThu ngân: '+cashierName))return;
+ const paymentGroupId=uid(),paidAt=new Date().toISOString();
+ os.forEach(o=>{o.paid=true;o.paymentGroupId=paymentGroupId;o.paidAt=paidAt;o.invoiceNo=invoiceNo;o.cashier=cashierName;o.paymentMethod='Chuyển khoản / tiền mặt'});
+ db.settings.invoiceCounter=next;db.settings.cashier=cashierName;save();
+ bodyForCurrentTableAfterPayment(invoiceNo,cashierName); render();
 };
+function bodyForCurrentTableAfterPayment(invoiceNo,cashierName){closeModal('tableModal');}
 document.getElementById('printBill').onclick=()=>printTableBill(currentTable);
 document.getElementById('cancelTable').onclick=()=>{if(confirm('Hủy toàn bộ đơn chưa thanh toán của bàn này?')){db.orders=db.orders.filter(o=>!(o.tableId===currentTable&&!o.paid));save();closeModal('tableModal');render()}};
 document.getElementById('transferTable').onclick=()=>{let target=prompt('Nhập số hoặc tên bàn muốn chuyển sang:');if(target===null)return;target=String(target).trim();if(!target)return alert('Vui lòng nhập bàn muốn chuyển sang.');let norm=target.toLowerCase().replace(/\s+/g,' ');let t=db.tables.find(x=>String(x.id)===target);if(!t)t=db.tables.find(x=>String(x.name).trim().toLowerCase()===norm);if(!t){let m=norm.match(/(?:bàn|ban)?\s*(\d+)$/i);if(m){let n=Number(m[1]);t=db.tables[n-1]||null;}}if(!t)return alert('Không tìm thấy bàn. Hãy nhập số bàn hoặc đúng tên bàn.');if(t.id===currentTable)return alert('Đây đã là bàn hiện tại.');if(activeOrders().some(o=>o.tableId===t.id))return alert(t.name+' đang có khách. Không thể chuyển đơn vào bàn đã có khách.');activeOrders().filter(o=>o.tableId===currentTable).forEach(o=>{o.tableId=t.id;o.tableName=t.name});save();closeModal('tableModal');render();};
@@ -1530,10 +1554,10 @@ function stopAIMic(silent=false){
 
 document.getElementById('micBtn').onclick=()=>window._aiVoiceListening?stopAIMic():startAIMic();
 document.getElementById('importData').onclick=()=>{let f=importFile.files[0];if(!f)return alert('Chọn file sao lưu JSON.');let rd=new FileReader();rd.onload=e=>{try{let x=JSON.parse(e.target.result);if(!x.orders||!x.dishes||!x.tables)throw 0;if(!confirm('Nhập dữ liệu sẽ thay thế dữ liệu hiện tại. Tiếp tục?'))return;db={...db,...x};save();render();alert('Khôi phục dữ liệu thành công.')}catch(err){alert('File sao lưu không hợp lệ.')}};rd.readAsText(f)};
-document.getElementById('saveSettings').onclick=()=>{db.settings.shopName=shopName.value;db.settings.backupReminder=backupReminder.value;db.settings.printerIp=document.getElementById('printerIp')?.value.trim()||'';db.settings.printerPort=Number(document.getElementById('printerPort')?.value||9100);save();alert('Đã lưu thiết lập.');};
+document.getElementById('saveSettings').onclick=()=>{db.settings.shopName=document.getElementById('shopName').value.trim()||'Quán Ku Sửu';db.settings.address=document.getElementById('shopAddress').value.trim()||'190 Bà Triệu';db.settings.phone=document.getElementById('shopPhone').value.trim()||'0825626399';db.settings.backupReminder=document.getElementById('backupReminder').value;db.settings.qrBankId=document.getElementById('qrBankId').value.trim();db.settings.qrAccountNo=document.getElementById('qrAccountNo').value.trim();db.settings.qrAccountName=document.getElementById('qrAccountName').value.trim();db.settings.printerIp=document.getElementById('printerIp')?.value.trim()||'';db.settings.printerPort=Number(document.getElementById('printerPort')?.value||9100);save();alert('Đã lưu thiết lập.');};
 
 function savePrinterSettings(){db.settings.printerIp=document.getElementById('printerIp')?.value.trim()||'';db.settings.printerPort=Number(document.getElementById('printerPort')?.value||9100);save();}
-function loadPrintSettingsUI(){const s=db.settings||{};const b=document.getElementById('printerIp'),c=document.getElementById('printerPort');if(b)b.value=s.printerIp||'';if(c)c.value=s.printerPort||9100}
+function loadPrintSettingsUI(){const s=db.settings||{};for(const [id,val] of [['shopName',s.shopName||'Quán Ku Sửu'],['shopAddress',s.address||'190 Bà Triệu'],['shopPhone',s.phone||'0825626399'],['qrBankId',s.qrBankId||''],['qrAccountNo',s.qrAccountNo||''],['qrAccountName',s.qrAccountName||'']]){const el=document.getElementById(id);if(el)el.value=val}const b=document.getElementById('printerIp'),c=document.getElementById('printerPort');if(b)b.value=s.printerIp||'';if(c)c.value=s.printerPort||9100}
 async function checkPrintBridge(){savePrinterSettings();const st=getPrinterSettings(),out=document.getElementById('printStatus');if(!st.ip){out.textContent='⚠️ Chưa nhập IP máy in.';out.className='print-status print-bad';return false;}try{let x;if(window.KuSuuPrinter&&typeof window.KuSuuPrinter.probe==='function'){x=JSON.parse(window.KuSuuPrinter.probe(st.ip,st.port));}else{const url=st.bridge;const hr=await fetch(url+'/health');const hx=await hr.json();if(!hx.ok)throw new Error('Print Bridge chưa sẵn sàng');const r=await fetch(url+'/probe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({printerIp:st.ip,port:st.port})});x=await r.json();}if(!x.ok)throw new Error(x.error||'Không kết nối được máy in');out.textContent='✅ Đã kết nối máy in '+st.ip+':'+st.port;out.className='print-status print-ok';return true}catch(e){out.textContent='❌ Không kết nối được máy in: '+e.message;out.className='print-status print-bad';return false}}
 document.getElementById('savePrinterSettings')?.addEventListener('click',()=>{savePrinterSettings();alert('Đã lưu máy in LAN.');});
 document.getElementById('testPrintBridge')?.addEventListener('click',checkPrintBridge);
@@ -1561,7 +1585,7 @@ async function wipeAllData(){
   if(confirmText!=='XOA TOAN BO'){alert('Đã hủy. Dữ liệu vẫn còn nguyên.');return;}
   try{
     if(cloudEnabled) await wipeCloudAll();
-    db={settings:{shopName:'Quán Ku Sửu (190 Bà Triệu)',backupReminder:'session'},tables:[],dishes:[],ingredients:[],recipes:{},orders:[]};
+    db={settings:{shopName:'Quán Ku Sửu',address:'190 Bà Triệu',phone:'0825626399',backupReminder:'session',invoiceCounter:0,qrBankId:'',qrAccountNo:'',qrAccountName:''},tables:[],dishes:[],ingredients:[],recipes:{},orders:[]};
     saveLocal();
     alert('✅ Đã xóa toàn bộ dữ liệu trên máy và Supabase.');
     render();
