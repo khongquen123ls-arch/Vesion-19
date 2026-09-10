@@ -24,8 +24,7 @@ class MainActivity : android.app.Activity() {
         private const val CONNECT_TIMEOUT_MS = 3500
         private const val SOCKET_TIMEOUT_MS = 10000
         private const val LINE_WIDTH = 48
-        private val PRINTER_CHARSET: Charset = Charsets.US_ASCII
-        private const val RASTER_MAX_WIDTH = 576
+        private val PRINTER_CHARSET: Charset = Charset.forName("US-ASCII")
     }
 
     private lateinit var webView: WebView
@@ -129,31 +128,33 @@ class MainActivity : android.app.Activity() {
         private fun buildReceipt(r: JSONObject): ByteArray {
             val out = ByteArrayOutputStream()
             fun cmd(vararg b: Int) = out.write(b.map { (it and 0xFF).toByte() }.toByteArray())
-            fun ascii(s: String) = out.write(s.toByteArray(Charsets.US_ASCII))
-            fun bold(on: Boolean) = cmd(0x1B, 0x45, if (on) 1 else 0)
-            fun align(n: Int) = cmd(0x1B, 0x61, n)
-            fun smartLine(s: String = "", isBold: Boolean = false, alignment: Int = 0, textSize: Int = 20) {
-                if (s.isEmpty()) { cmd(0x0A); return }
-                if (s.any { it.code > 126 }) {
-                    out.write(renderUnicodeLine(s, isBold, textSize, alignment))
+            fun text(s: String) = out.write(s.toByteArray(PRINTER_CHARSET))
+            fun line(s: String = "") {
+                if (s.all { it.code < 128 }) {
+                    text(s); cmd(0x0A)
                 } else {
-                    align(alignment); bold(isBold); ascii(s); cmd(0x0A); bold(false)
+                    writeUnicodeLine(out, s)
+                    cmd(0x0A)
                 }
             }
+            fun bold(on: Boolean) = cmd(0x1B, 0x45, if (on) 1 else 0)
+            fun align(n: Int) = cmd(0x1B, 0x61, n)
 
-            cmd(0x1B, 0x40)
-            // V19-speed path: ASCII remains raw ESC/POS text. Only Unicode lines
-            // are rasterized, and those bitmaps are tightly cropped to the text.
-            smartLine(r.optString("shopName", "KU SUU POS"), true, 1, 26)
-            smartLine("Địa chỉ: " + r.optString("address", ""), false, 1, 20)
-            smartLine("ĐIỆN THOẠI: " + r.optString("phone", ""), false, 1, 20)
-            smartLine("HÓA ĐƠN BÁN HÀNG", true, 1, 24)
-            smartLine("Số HĐ: " + r.optString("invoiceNo", ""), false, 1, 20)
-            smartLine("Ngày: " + r.optString("date", ""), false, 1, 20)
-            smartLine("Bàn: " + r.optString("table", ""), false, 1, 20)
-            smartLine("Thu ngân: " + r.optString("cashier", "Ku Suu"), false, 1, 20)
-            align(0); ascii("-----------------------------------------------"); cmd(0x0A)
+            cmd(0x1B, 0x40) // initialize
+            // Keep V19's direct ESC/POS text path. Unsupported Vietnamese glyphs
+            // are rasterized only on the affected line; the rest stays byte-fast.
+            align(1)
+            bold(true); line(r.optString("shopName", "KU SỬU POS")); bold(false)
+            line("Địa chỉ: " + r.optString("address", ""))
+            line("ĐIỆN THOẠI: " + r.optString("phone", ""))
+            bold(true); line("HÓA ĐƠN BÁN HÀNG"); bold(false)
+            line("Số HĐ: " + r.optString("invoiceNo", ""))
+            line("Ngày: " + r.optString("date", ""))
+            line("Bàn: " + r.optString("table", ""))
+            line("Thu ngân: " + r.optString("cashier", "Ku Sửu"))
+            line("-----------------------------------------------")
 
+            align(0)
             val items = r.optJSONArray("items")
             if (items != null) {
                 for (i in 0 until items.length()) {
@@ -165,81 +166,96 @@ class MainActivity : android.app.Activity() {
                         if (idx == 0) {
                             val qtyText = formatQty(qty)
                             val money = formatMoney(total)
-                            val line = (part.take(32).padEnd(32, ' ') +
-                                    "x$qtyText".padStart(6) + money.padStart(10)).take(LINE_WIDTH)
-                            smartLine(line, false, 0, 20)
-                        } else smartLine("  " + part, false, 0, 20)
+                            val left = part.take(32).padEnd(32, ' ')
+                            val right = "x$qtyText".padStart(6) + money.padStart(10)
+                            line((left + right).take(LINE_WIDTH))
+                        } else line("  " + part)
                     }
                 }
             }
-            ascii("-----------------------------------------------"); cmd(0x0A)
-            smartLine("Tạm tính: " + formatMoney(r.optLong("subtotal", 0L)), false, 2, 20)
+            line("-----------------------------------------------")
+            align(2)
+            line("Tạm tính: " + formatMoney(r.optLong("subtotal", 0L)))
             val discount = r.optLong("discount", 0L)
-            if (discount != 0L) smartLine("Giảm giá: " + formatMoney(discount), false, 2, 20)
-            smartLine("TỔNG THANH TOÁN: " + formatMoney(r.optLong("total", 0L)), true, 2, 24)
-            smartLine("Thanh toán: " + r.optString("payment", "Tiền mặt"), false, 2, 20)
-            cmd(0x0A)
-            smartLine("CẢM ƠN QUÝ KHÁCH!", true, 1, 20)
-            smartLine("Hẹn gặp lại anh/chị.", false, 1, 18)
-            cmd(0x0A)
-            cmd(0x1B, 0x64, 3)
-            cmd(0x1D, 0x56, 0)
+            if (discount != 0L) line("Giảm giá: " + formatMoney(discount))
+            bold(true)
+            line("TỔNG THANH TOÁN: " + formatMoney(r.optLong("total", 0L)))
+            bold(false)
+            line("Thanh toán: " + r.optString("payment", "Tiền mặt"))
+            line("")
+            bold(true); line("CẢM ƠN QUÝ KHÁCH!"); bold(false)
+            line("Hẹn gặp lại anh/chị.")
+            line("")
+            cmd(0x1B, 0x64, 3) // feed 3
+            cmd(0x1D, 0x56, 0) // cut
             return out.toByteArray()
         }
 
-        /**
-         * Unicode-safe fallback used only for lines that really contain
-         * non-ASCII characters. Unlike the previous versions, this does NOT
-         * create a 576-dot bitmap for the entire receipt or every line.
-         * The bitmap width is cropped to the actual text, greatly reducing
-         * bytes sent and printer raster processing time.
-         */
-        private fun renderUnicodeLine(value: String, isBold: Boolean, textSize: Int, alignment: Int): ByteArray {
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.create("sans-serif", if (isBold) Typeface.BOLD else Typeface.NORMAL)
-                this.textSize = textSize.toFloat()
+        private fun writeUnicodeLine(out: ByteArrayOutputStream, value: String) {
+            // Render only the current Vietnamese/unicode line, not the whole receipt.
+            // This keeps the V19 fast path for ASCII while Android's font engine
+            // supplies proper Vietnamese glyphs. The bitmap is tightly cropped.
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
+                typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+                textSize = 25f
                 color = android.graphics.Color.BLACK
-                isSubpixelText = true
+                isDither = false
             }
-            val padding = 6
-            val measured = paint.measureText(value)
-            val width = (((measured.toInt().coerceIn(8, RASTER_MAX_WIDTH - padding * 2) + padding * 2) + 7) / 8) * 8
-            val height = (textSize * 1.35f).toInt().coerceAtLeast(26)
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            canvas.drawColor(android.graphics.Color.WHITE)
-            val x = when (alignment) {
-                1 -> (width - measured) / 2f
-                2 -> width - padding - measured
-                else -> padding.toFloat()
-            }.coerceIn(0f, (width - padding).toFloat())
-            val baseline = height / 2f - (paint.ascent() + paint.descent()) / 2f
-            canvas.drawText(value, x, baseline, paint)
+            val fm = paint.fontMetrics
+            val pad = 2
+            val width = kotlin.math.ceil(paint.measureText(value)).toInt().coerceIn(1, 576 - pad * 2) + pad * 2
+            val height = kotlin.math.ceil(fm.bottom - fm.top).toInt().coerceAtLeast(24) + pad * 2
+            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            try {
+                val canvas = Canvas(bmp)
+                canvas.drawColor(android.graphics.Color.WHITE)
+                canvas.drawText(value, pad.toFloat(), pad - fm.top, paint)
 
-            val widthBytes = width / 8
-            val raster = ByteArray(widthBytes * height)
-            val pixels = IntArray(width * height)
-            bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-            for (y in 0 until height) {
-                val row = y * width
-                val outRow = y * widthBytes
-                for (x0 in 0 until width) {
-                    val c = pixels[row + x0]
-                    if ((android.graphics.Color.red(c) + android.graphics.Color.green(c) + android.graphics.Color.blue(c)) / 3 < 180) {
-                        val idx = outRow + (x0 shr 3)
-                        raster[idx] = (raster[idx].toInt() or (0x80 shr (x0 and 7))).toByte()
+                var left = width
+                var right = -1
+                var top = height
+                var bottom = -1
+                val pixels = IntArray(width)
+                for (y in 0 until height) {
+                    bmp.getPixels(pixels, 0, width, 0, y, width, 1)
+                    for (x in 0 until width) {
+                        if (android.graphics.Color.red(pixels[x]) < 200) {
+                            if (x < left) left = x
+                            if (x > right) right = x
+                            if (y < top) top = y
+                            if (y > bottom) bottom = y
+                        }
                     }
                 }
+                if (right < left || bottom < top) return
+                left = (left - 1).coerceAtLeast(0)
+                right = (right + 1).coerceAtMost(width - 1)
+                top = (top - 1).coerceAtLeast(0)
+                bottom = (bottom + 1).coerceAtMost(height - 1)
+                val cropW = right - left + 1
+                val cropH = bottom - top + 1
+                val wb = (cropW + 7) / 8
+                val raster = ByteArray(wb * cropH)
+                val row = IntArray(cropW)
+                for (yy in 0 until cropH) {
+                    bmp.getPixels(row, 0, cropW, left, top + yy, cropW, 1)
+                    for (xx in 0 until cropW) {
+                        if (android.graphics.Color.red(row[xx]) < 180) {
+                            raster[yy * wb + (xx ushr 3)] =
+                                (raster[yy * wb + (xx ushr 3)].toInt() or (0x80 ushr (xx and 7))).toByte()
+                        }
+                    }
+                }
+                // GS v 0 — printer receives one compact bitmap for this line.
+                out.write(byteArrayOf(0x1D, 0x76, 0x30, 0x00))
+                out.write(wb and 0xFF)
+                out.write((wb ushr 8) and 0xFF)
+                out.write(cropH and 0xFF)
+                out.write((cropH ushr 8) and 0xFF)
+                out.write(raster)
+            } finally {
+                bmp.recycle()
             }
-            bitmap.recycle()
-
-            val cmd = ByteArrayOutputStream(raster.size + 16)
-            cmd.write(byteArrayOf(0x1D, 0x76, 0x30, 0x00))
-            cmd.write(widthBytes and 0xFF); cmd.write((widthBytes shr 8) and 0xFF)
-            cmd.write(height and 0xFF); cmd.write((height shr 8) and 0xFF)
-            cmd.write(raster)
-            cmd.write(0x0A)
-            return cmd.toByteArray()
         }
 
         private fun wrapText(value: String, max: Int): List<String> {
