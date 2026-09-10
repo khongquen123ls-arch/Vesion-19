@@ -520,11 +520,6 @@ body.mobile-preview-child #mobilePreviewOverlay,body.mobile-preview-child .mobil
     left:0!important;
   }
 }
-
-<style id="v19-invoice-premium">
-.invoice-shell{background:linear-gradient(180deg,#fffdf8,#f7f1e7);border:1px solid #ded4c4;border-radius:18px;overflow:hidden;box-shadow:0 12px 34px rgba(54,48,39,.10)}
-.invoice-head{padding:18px 18px 14px;background:linear-gradient(135deg,#4f554d,#343733);color:#fff}.invoice-brand{font-size:20px;font-weight:900;letter-spacing:.2px}.invoice-title{font-size:13px;font-weight:800;opacity:.9;margin-top:3px;letter-spacing:.8px}.invoice-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px 16px;padding:13px 18px;border-bottom:1px dashed #d7cdbd;font-size:13px}.invoice-meta span{color:#777268}.invoice-meta b{color:#3f433e}.invoice-items{padding:4px 18px}.invoice-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-bottom:1px solid #eee8de}.invoice-item:last-child{border-bottom:0}.invoice-item-name{font-weight:800;color:#3e423d}.invoice-item-sub{font-size:12px;color:#858077;margin-top:3px}.invoice-item-total{font-weight:800;color:#4c5049;white-space:nowrap}.invoice-summary{padding:12px 18px;border-top:1px dashed #d7cdbd;background:#fbf7ef}.invoice-summary-row{display:flex;justify-content:space-between;gap:12px;padding:4px 0;color:#656158;font-size:13px}.invoice-grand{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0 3px;margin-top:5px;border-top:1px solid #ddd4c6;font-size:17px;color:#352f27}.invoice-grand strong:last-child{font-size:19px}.invoice-footer{text-align:center;padding:14px 18px 17px;color:#746e64;font-size:12px}.invoice-footer b{display:block;color:#4b5048;font-size:14px;margin-bottom:4px}.invoice-call-note{padding:9px 18px;background:#f0ece4;color:#70695f;font-size:12px;border-top:1px solid #e2dacd;border-bottom:1px solid #e2dacd}.invoice-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.invoice-actions .btn{flex:1;min-width:120px}@media(max-width:700px){.invoice-meta{grid-template-columns:1fr}.invoice-items,.invoice-summary,.invoice-head,.invoice-meta,.invoice-footer,.invoice-call-note{padding-left:14px;padding-right:14px}}
-</style>
 </style>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#2f7d32">
@@ -1080,38 +1075,20 @@ function makeReceiptData(orders){
  const items=mergedBillItems(orders), total=orders.reduce((s,o)=>s+Number(o.total||0),0);
  const first=orders[0]||{};
  const rawId=String(first.paymentGroupId||first.id||Date.now()).replace(/[^a-zA-Z0-9]/g,'').slice(-8).toUpperCase();
- const dtIn=first.createdAt||first.paidAt||new Date().toISOString();
- const dtOut=first.paidAt||dtIn;
- const dIn=new Date(dtIn), dOut=new Date(dtOut);
- const date=new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(dOut);
- const timeIn=new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false}).format(dIn);
- const timeOut=new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false}).format(dOut);
- return {shopName:db.settings?.shopName||'KU SỬU POS',address:db.settings?.address||'',phone:db.settings?.phone||'',invoiceNo:'KS-'+rawId,date,timeIn,timeOut,table:first.tableName||'Bàn',cashier:db.settings?.cashier||'Ku Sửu',items:items.map(i=>({name:i.name,qty:Number(i.qty||0),price:Math.round(i.price||0),total:Math.round(i.total||0)})),subtotal:Math.round(total),discount:0,total:Math.round(total),payment:first.paymentMethod||'Tiền mặt',taxRate:'0%',tax:0};
+ const dt=first.paidAt||first.createdAt||new Date().toISOString();
+ const d=new Date(dt);
+ const date=new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short'}).format(d);
+ return {shopName:db.settings?.shopName||'KU SỬU POS',address:db.settings?.address||'',phone:db.settings?.phone||'',invoiceNo:'KS-'+rawId,date,table:first.tableName||'Bàn',cashier:db.settings?.cashier||'Ku Sửu',items:items.map(i=>({name:i.name,qty:Number(i.qty||0),total:Math.round(i.total||0)})),subtotal:Math.round(total),discount:0,total:Math.round(total),payment:first.paymentMethod||'Tiền mặt'};
 }
 function receiptRaster(orders){
- // Fallback raster — cùng bố cục 48 cột với Android native printer.
- const W=576,pad=18,fs=23,small=18,lh=28; const items=mergedBillItems(orders); const total=orders.reduce((s,o)=>s+Number(o.total||0),0); const first=orders[0]||{};
- const dtIn=new Date(first.createdAt||first.paidAt||Date.now()),dtOut=new Date(first.paidAt||dtIn);
- const fmtDate=d=>new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(d);
- const fmtTime=d=>new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
- const money=n=>new Intl.NumberFormat('vi-VN').format(Math.round(n||0));
- const lines=[]; const push=(t,b=0,c=small,align='left',mono=false)=>lines.push({t:String(t),b,c,align,mono});
- const wrap=(text,max=18)=>{const out=[];let rest=String(text).trim().replace(/\s+/g,' ');while(rest.length>max){let k=rest.lastIndexOf(' ',max);if(k<Math.floor(max/2))k=max;out.push(rest.slice(0,k).trim());rest=rest.slice(k).trim()}if(rest)out.push(rest);return out};
- push(db.settings?.shopName||'KU SỬU POS',1,fs,'center');
- if(db.settings?.address)push('Địa chỉ: '+db.settings.address,0,small,'center');
- if(db.settings?.phone)push('Điện thoại: '+db.settings.phone,0,small,'center');
- push('',0,small); push('PHIẾU TÍNH TIỀN',1,25,'center');
- push('Bàn: '+(first.tableName||'Bàn')); push('Số phiếu: KS-'+String(first.paymentGroupId||first.id||Date.now()).replace(/[^a-zA-Z0-9]/g,'').slice(-8).toUpperCase()+' - Ngày: '+fmtDate(dtOut));
- push('Giờ vào: '+fmtTime(dtIn)+' - Giờ ra: '+fmtTime(dtOut)); push('Thu ngân: '+(db.settings?.cashier||'Ku Sửu'));
- push('TT'.padEnd(3)+'Tên hàng'.padEnd(18)+'SL'.padStart(4)+'Đơn giá'.padStart(10)+'Thành tiền'.padStart(13),1,17,'left',true);
- push('-'.repeat(48),0,14,'left',true);
- items.forEach((i,idx)=>{const parts=wrap(i.name);parts.forEach((name,j)=>{push(((j===0?String(idx+1):'').padEnd(3)+name.padEnd(18)+(j===0?String(i.qty):'').padStart(4)+(j===0?money(i.price):'').padStart(10)+(j===0?money(i.total):'').padStart(13)).slice(0,48),0,16,'left',true)});push('.'.repeat(48),0,12,'left',true)});
- push('-'.repeat(48),0,14,'left',true);
- push(('TỔNG CỘNG:'.padEnd(35)+money(total).padStart(13)).slice(0,48),1,19,'left',true);
- push(('Thuế GTGT'.padEnd(31)+'0%'.padStart(4)+money(0).padStart(13)).slice(0,48),0,17,'left',true);
- push('',0,small); push('CẢM ƠN QUÝ KHÁCH',1,20,'center');
+ // V18 fallback: giữ lại raster để chạy với trình duyệt/Print Bridge cũ.
+ const W=576,pad=28,fs=25,small=20,lh=34; const items=mergedBillItems(orders); const total=orders.reduce((s,o)=>s+Number(o.total||0),0); const table=orders[0]?.tableName||'Bàn';
+ const lines=[]; const wrap=(text,max=36)=>{text=String(text);while(text.length>max){let k=text.lastIndexOf(' ',max);if(k<8)k=max;lines.push(text.slice(0,k));text=text.slice(k).trim()}if(text)lines.push(text)};
+ lines.push({t:(db.settings?.shopName||'KU SỬU POS'),b:1,c:fs});lines.push({t:'HÓA ĐƠN BÁN HÀNG',b:1,c:fs});lines.push({t:table,b:1,c:fs});lines.push({t:'--------------------------------',c:small});
+ items.forEach(i=>{const before=lines.length;wrap(i.name,29);const nameLines=lines.splice(before);nameLines.forEach((n,idx)=>lines.push({t:idx===nameLines.length-1?`${n}  x${i.qty}  ${new Intl.NumberFormat('vi-VN').format(i.total)} đ`:n,c:small}));});
+ lines.push({t:'--------------------------------',c:small});lines.push({t:`TỔNG THANH TOÁN: ${new Intl.NumberFormat('vi-VN').format(total)} đ`,b:1,c:fs});lines.push({t:'',c:small});lines.push({t:'CẢM ƠN QUÝ KHÁCH!',b:1,c:small});
  const H=pad*2+lines.length*lh+20,canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#000';ctx.textBaseline='top';let y=pad;
- lines.forEach(l=>{ctx.font=`${l.b?'700 ':''}${l.c}px ${l.mono?'monospace':'Arial'}, sans-serif`;const w=ctx.measureText(l.t).width;let x=pad;if(l.align==='center')x=(W-w)/2;else if(l.align==='right')x=W-pad-w;ctx.fillText(l.t,x,y);y+=lh});
+ lines.forEach(l=>{ctx.font=`${l.b?'700 ':''}${l.c}px Arial, sans-serif`;const w=ctx.measureText(l.t).width;ctx.fillText(l.t,(W-w)/2,y);y+=lh});
  const d=ctx.getImageData(0,0,W,H).data,bytes=new Uint8Array(Math.ceil(W/8)*H),wb=W/8;for(let yy=0;yy<H;yy++)for(let xx=0;xx<W;xx++){const id=(yy*W+xx)*4;if(d[id]<180)bytes[yy*wb+(xx>>3)]|=(0x80>>(xx&7));}return {base64:btoa(String.fromCharCode(...bytes)),widthBytes:wb};
 }
 async function sendThermalPrint(orders,silent=false){
@@ -1256,22 +1233,14 @@ window.openTable=id=>{
    const grandQty=allItems.reduce((s,i)=>s+Number(i.qty||0),0);
    const firstTime=new Date(os[0].createdAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
    const lastTime=new Date(os[os.length-1].createdAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
-   body.innerHTML=`<div class="invoice-shell">
-     <div class="invoice-head"><div class="invoice-brand">${escHTML(db.settings?.shopName||'KU SỬU POS')}</div><div class="invoice-title">HÓA ĐƠN BÁN HÀNG · HÓA ĐƠN TỔNG HỢP</div></div>
-     <div class="invoice-meta">
-       <div><span>Số hóa đơn</span><br><b>KS-${escHTML(String(os[0].paymentGroupId||os[0].id||'').replace(/[^a-zA-Z0-9]/g,'').slice(-8).toUpperCase())}</b></div>
-       <div><span>Thời gian</span><br><b>${firstTime}${os.length>1?' → '+lastTime:''}</b></div>
-       <div><span>Bàn</span><br><b>${escHTML(t.name)}</b></div>
-       <div><span>Trạng thái</span><br><b>ĐANG MỞ · ${grandQty} món</b></div>
+   body.innerHTML=`<div class="card table-order-card" style="margin:8px 0">
+     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+       <b>HÓA ĐƠN TỔNG HỢP · ${firstTime}${os.length>1?' → '+lastTime:''}</b>
+       <span class="status-pill">${grandQty} món</span>
      </div>
-     <div class="invoice-call-note">${os.length} lượt gọi món đã được gộp thành <b>một hóa đơn duy nhất</b>.</div>
-     <div class="invoice-items">${allItems.map(i=>`<div class="invoice-item"><div><div class="invoice-item-name">${escHTML(i.name)}</div><div class="invoice-item-sub">${i.qty} × ${VND(i.price)}</div></div><div class="invoice-item-total">${VND(i.total)}</div></div>`).join('')}</div>
-     <div class="invoice-summary">
-       <div class="invoice-summary-row"><span>Tạm tính</span><b>${VND(grandTotal)}</b></div>
-       <div class="invoice-summary-row"><span>Giảm giá</span><b>0 đ</b></div>
-       <div class="invoice-grand"><strong>TỔNG THANH TOÁN</strong><strong>${VND(grandTotal)}</strong></div>
-     </div>
-     <div class="invoice-footer"><b>Chưa thanh toán</b>Kiểm tra lại món trước khi thanh toán hoặc in hóa đơn.</div>
+     <div class="mini" style="margin:7px 0 4px">${os.length} lượt gọi · đã gộp toàn bộ món của ${t.name}</div>
+     <ul>${allItems.map(i=>`<li>${escHTML(i.name)} × ${i.qty} = ${VND(i.total)}</li>`).join('')}</ul>
+     <div class="table-order-total"><b>Tổng thanh toán: ${VND(grandTotal)}</b></div>
    </div>`;
  }
  document.getElementById('tableModal').classList.add('show');

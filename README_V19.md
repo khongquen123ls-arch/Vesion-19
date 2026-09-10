@@ -21,9 +21,3 @@ V19 chọn ESC/POS code page 19 + Windows-1258 cho đường in text. Một số
 
 ## iPhone
 iOS không thể build từ APK Android. V19 giữ PWA manifest/icon cho iPhone Add to Home Screen; bản native iOS cần project Xcode/Swift riêng và module TCP printer riêng.
-
-
-## V19.1.1 fixes
-- Redesigned the in-app table consolidated invoice with a professional receipt-style layout.
-- Vietnamese printing no longer relies on printer codepage 19/Windows-1258. Unicode Vietnamese lines are rendered with Android sans-serif and sent as ESC/POS raster; ASCII remains native ESC/POS for speed.
-- VersionCode 19 / VersionName 19.1.
